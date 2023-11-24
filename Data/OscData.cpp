@@ -40,7 +40,15 @@ void OscData::setWaveFrequency(const int midiNoteNumber) {
 void OscData::setFMParams(const float depth, const float frequency) {
     fmOsc.setFrequency(frequency);
     fmDepth = depth;
-    setFrequency(juce::MidiMessage::getMidiNoteInHertz(lastMidiNote) + fmMod);
+
+    // Calculate the modulated frequency
+    float modulatedFrequency = juce::MidiMessage::getMidiNoteInHertz(lastMidiNote) + fmMod;
+
+    // Add a DC offset to keep the frequency positive
+    modulatedFrequency += std::abs(std::min(0.0f, modulatedFrequency));
+
+    // Set the frequency
+    setFrequency(modulatedFrequency);
 }
 
 void OscData::getNextAudioBlock(juce::dsp::AudioBlock<float>& block) {

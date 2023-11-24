@@ -11,7 +11,7 @@
 
 //==============================================================================
 SynthTalkAudioProcessorEditor::SynthTalkAudioProcessorEditor (SynthTalkAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p), osc (audioProcessor.apvts, "OSC1WAVETYPE"), adsr(audioProcessor.apvts)
+    : AudioProcessorEditor (&p), audioProcessor (p), osc (audioProcessor.apvts, "OSC1WAVETYPE", "OSC1FMFREQ", "OSC1FMDEPTH"), adsr(audioProcessor.apvts)
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
@@ -45,5 +45,5 @@ void SynthTalkAudioProcessorEditor::paint (juce::Graphics& g)
 void SynthTalkAudioProcessorEditor::resized()
 {
     adsr.setBounds(getLocalBounds());
-    osc.setBounds(10, 10, 100, 30);
+    osc.setBounds(10, 10, 200, 200);
 }

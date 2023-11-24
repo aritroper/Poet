@@ -165,8 +165,8 @@ void SynthTalkAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             
             auto &oscWaveType = *apvts.getRawParameterValue("OSC1WAVETYPE");
             
-            auto &fmDepth = *apvts.getRawParameterValue("FMDEPTH");
-            auto &fmFreq = *apvts.getRawParameterValue("FMFREQ");
+            auto &fmDepth = *apvts.getRawParameterValue("OSC1FMDEPTH");
+            auto &fmFreq = *apvts.getRawParameterValue("OSC1FMFREQ");
             
             voice->getOscillator().setWaveType(oscWaveType);
             voice->getOscillator().setFMParams(fmDepth.load(), fmFreq.load());
@@ -220,8 +220,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout SynthTalkAudioProcessor::cre
     params.push_back(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID("OSC1WAVETYPE", 1), "Osc 1 Wave Type", juce::StringArray { "Sine", "Saw", "Sqaure " }, 0, ""));
     
     // FM
-    params.push_back (std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("FMFREQ", 2), "FM Frequency", juce::NormalisableRange<float> { 0.0f, 1000.0f, }, 5.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("FMDEPTH", 3), "FM Depth", juce::NormalisableRange<float> { 0.0f, 1000.0f, }, 50.0f));
+    params.push_back (std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("OSC1FMFREQ", 2), "FM Frequency", juce::NormalisableRange<float> { 0.0f, 1000.0f, 0.01f, 0.3f }, 5.0f));
+    params.push_back (std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("OSC1FMDEPTH", 3), "FM Depth", juce::NormalisableRange<float> { 0.0f, 1000.0f, 0.01f, 0.3f }, 50.0f));
     
     // ADSR
     params.push_back (std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("ATTACK", 2), "Attack", juce::NormalisableRange<float> { 0.1f, 1.0f, 0.1f }, 0.1f));
