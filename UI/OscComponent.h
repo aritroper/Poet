@@ -18,13 +18,16 @@
 class OscComponent  : public juce::Component
 {
 public:
-    OscComponent(juce::AudioProcessorValueTreeState& apvts, juce::String waveSelectorId, juce::String fmFreqId, juce::String fmDepthId);
+    OscComponent(juce::AudioProcessorValueTreeState& apvts);
     ~OscComponent() override;
     
     void paint (juce::Graphics&) override;
     void resized() override;
+    void setVoice(int voice);
 
 private:
+    juce::AudioProcessorValueTreeState& apvts;
+    
     juce::ComboBox oscWaveSelector;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> oscWaveSelectorAttachment;
     
@@ -39,7 +42,7 @@ private:
     
     using Attachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     
-    void setSliderWithLabel (juce::Slider& slider, juce::Label& label, juce::AudioProcessorValueTreeState& apvts, juce::String paramId, std::unique_ptr<Attachment>& attachment);
+    void makeSliderWithLabel (juce::Slider& slider, juce::Label& label);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OscComponent)
 };

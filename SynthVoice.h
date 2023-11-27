@@ -26,13 +26,14 @@ public:
     void renderNextBlock (juce::AudioBuffer<float> &outputBuffer, int startSample, int numSamples) override;
     
     void update (const float attack, const float decay, const float sustain, const float release);
-    OscData& getOscillator() { return osc; };
+    OscData& getOscillator(int osc) { return oscillators[osc]; };
     
 private:
     AdsrData adsr;
     juce::AudioBuffer<float> synthBuffer;
     
-    OscData osc;
+    OscData oscillators[5];
+    
     juce::dsp::Gain<float> gain;
     bool isPrepared { false };
 };

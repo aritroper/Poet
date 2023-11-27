@@ -10,7 +10,7 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-SynthTalkAudioProcessor::SynthTalkAudioProcessor()
+SynthTalkAudioProcessor::SynthTalkAudioProcessor(int numberOfVoices)
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -19,12 +19,14 @@ SynthTalkAudioProcessor::SynthTalkAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       ), apvts(*this, nullptr, "Parameters", createParams())
+                       ), apvts(*this, nullptr, "Parameters", createParams(numberOfVoices)), numberOfVoices(numberOfVoices)
 
 #endif
 {
     synth.addSound(new SynthSound());
-    synth.addVoice(new SynthVoice());
+    for (int i = 0; i < numberOfVoices; ++i) {
+        synth.addVoice(new SynthVoice());
+    }
 }
 
 SynthTalkAudioProcessor::~SynthTalkAudioProcessor()
@@ -154,23 +156,24 @@ void SynthTalkAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     for (int i = 0; i < synth.getNumVoices(); ++i) {
         if (auto voice = dynamic_cast<SynthVoice*>(synth.getVoice(i))) {
-            // Osc controls
-            // ADSR
-            // LFO
+            juce::String voiceStr = juce::String(i);
             
-            auto &attack = *apvts.getRawParameterValue("ATTACK");
-            auto &decay = *apvts.getRawParameterValue("DECAY");
-            auto &sustain = *apvts.getRawParameterValue("SUSTAIN");
-            auto &release = *apvts.getRawParameterValue("RELEASE");
-            
-            auto &oscWaveType = *apvts.getRawParameterValue("OSC1WAVETYPE");
-            
-            auto &fmDepth = *apvts.getRawParameterValue("OSC1FMDEPTH");
-            auto &fmFreq = *apvts.getRawParameterValue("OSC1FMFREQ");
-            
-            voice->getOscillator().setWaveType(oscWaveType);
-            voice->getOscillator().setFMParams(fmDepth.load(), fmFreq.load());
-            voice->update(attack.load(), decay.load(), sustain.load(), release.load());
+            auto &attack = *apvts.getRawParameterValue("ATTACK" + voiceStr);
+            auto &decay = *apvts.getRawParameterValue("DECAY" + voiceStr);
+            auto &sustain = *apvts.getRawParameterValue("SUSTAIN" + voiceStr);
+            auto &release = *apvts.getRawParameterValue("RELEASE" + voiceStr);
+
+            auto &oscWaveType = *apvts.getRawParameterValue("OSCWAVETYPE" + voiceStr);
+
+            auto &fmDepth = *apvts.getRawParameterValue("OSCFMDEPTH" + voiceStr);
+            auto &fmFreq = *apvts.getRawParameterValue("OSCFMFREQ" + voiceStr);
+
+            // UPDATE HERE
+            for (int i = 0; i < 5; ++i) {
+                voice->getOscillator(i).setWaveType(oscWaveType);
+                voice->getOscillator(i).setFMParams(fmDepth.load(), fmFreq.load());
+                voice->update(attack.load(), decay.load(), sustain.load(), release.load());
+            }
         }
     }
         
@@ -207,30 +210,45 @@ void SynthTalkAudioProcessor::setStateInformation (const void* data, int sizeInB
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new SynthTalkAudioProcessor();
+    return new SynthTalkAudioProcessor(5);
 }
 
 // Value Tree
 
-juce::AudioProcessorValueTreeState::ParameterLayout SynthTalkAudioProcessor::createParams(){
-    
+juce::AudioProcessorValueTreeState::ParameterLayout SynthTalkAudioProcessor::createParams(int numberOfVoices) {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+
+    int paramId = 0;
     
-    // OSC Select
-    params.push_back(std::make_unique<juce::AudioParameterChoice>(juce::ParameterID("OSC1WAVETYPE", 1), "Osc 1 Wave Type", juce::StringArray { "Sine", "Saw", "Sqaure " }, 0, ""));
-    
-    // FM
-    params.push_back (std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("OSC1FMFREQ", 2), "FM Frequency", juce::NormalisableRange<float> { 0.0f, 1000.0f, 0.01f, 0.3f }, 5.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("OSC1FMDEPTH", 3), "FM Depth", juce::NormalisableRange<float> { 0.0f, 1000.0f, 0.01f, 0.3f }, 50.0f));
-    
-    // ADSR
-    params.push_back (std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("ATTACK", 2), "Attack", juce::NormalisableRange<float> { 0.1f, 1.0f, 0.1f }, 0.1f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("DECAY", 3), "Decay", juce::NormalisableRange<float> { 0.1f, 1.0f, 0.1f }, 0.1f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("SUSTAIN", 4), "Sustain", juce::NormalisableRange<float> { 0.1f, 1.0f, 0.1f }, 1.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("RELEASE", 5), "Release", juce::NormalisableRange<float> { 0.1f, 3.0f, 0.1f }, 0.4f));
-    
-    // GAIN
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(juce::ParameterID("GAIN", 6), "Gain", 0.0f, 1.0f, 0.5f));
-    
+    for (int voice = 0; voice < numberOfVoices; ++voice) {
+        juce::String voiceStr = juce::String(voice);
+
+        auto addParam = [&](const juce::String& name, const juce::String& label, const juce::NormalisableRange<float>& range, float defaultValue = 0.0f) {
+            ++paramId;
+            params.push_back(std::make_unique<juce::AudioParameterFloat>(
+                juce::ParameterID(name + voiceStr, paramId),
+                label, range, defaultValue));
+        };
+
+        // OSC Select
+        params.push_back(std::make_unique<juce::AudioParameterChoice>(
+            juce::ParameterID("OSCWAVETYPE" + voiceStr, paramId),
+            "Osc Wave Type",
+            juce::StringArray { "Sine", "Saw", "Square" }, 0, ""));
+
+        // FM
+        addParam("OSCFMFREQ", "FM Frequency", { 0.0f, 1000.0f, 0.01f, 0.3f }, 5.0f);
+        addParam("OSCFMDEPTH", "FM Depth", { 0.0f, 1000.0f, 0.01f, 0.3f }, 50.0f);
+
+        // ADSR
+        addParam("ATTACK", "Attack", { 0.1f, 1.0f, 0.1f }, 0.1f);
+        addParam("DECAY", "Decay", { 0.1f, 1.0f, 0.1f }, 0.1f);
+        addParam("SUSTAIN", "Sustain", { 0.1f, 1.0f, 0.1f }, 1.0f);
+        addParam("RELEASE", "Release", { 0.1f, 3.0f, 0.1f }, 0.4f);
+
+        // GAIN
+        addParam("GAIN", "Gain", { 0.0f, 1.0f, 0.01f }, 0.5f);
+    }
+
     return { params.begin(), params.end() };
 }

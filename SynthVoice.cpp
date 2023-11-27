@@ -16,6 +16,7 @@ bool SynthVoice::canPlaySound (juce::SynthesiserSound* sound) {
 
 void SynthVoice::startNote (int midiNoteNumber, float velocity, juce::SynthesiserSound *sound, int currentPitchWheelPosition) {
     osc.setWaveFrequency(midiNoteNumber);
+    osc2.setWaveFrequency(midiNoteNumber + 5);
     adsr.noteOn();
 }
 
@@ -44,9 +45,11 @@ void SynthVoice::prepareToPlay(double sampleRate, int samplesPerBlock, int outpu
     spec.numChannels = outputChannels;
     
     osc.prepareToPlay(spec);
+    osc2.prepareToPlay(spec);
     gain.prepare(spec);
     
     osc.setFrequency(440.0f);
+    osc2.setFrequency(440.0f);
     gain.setGainLinear(0.3f);
     
     isPrepared = true;
@@ -56,24 +59,32 @@ void SynthVoice::update (const float attack, const float decay, const float sust
     adsr.updateADSR(attack, decay, sustain, release);
 }
 
-void SynthVoice::renderNextBlock (juce::AudioBuffer<float> &outputBuffer, int startSample, int numSamples) {
+void SynthVoice::renderNextBlock(juce::AudioBuffer<float> &outputBuffer, int startSample, int numSamples) {
     jassert(isPrepared);
-    
+
     if (!isVoiceActive()) {
         return;
     }
-    
+
     synthBuffer.setSize(outputBuffer.getNumChannels(), numSamples, false, false, true);
     synthBuffer.clear();
-    
-    juce::dsp::AudioBlock<float> audioBlock { synthBuffer };
-    osc.getNextAudioBlock(audioBlock);
-    gain.process(juce::dsp::ProcessContextReplacing<float> (audioBlock));
+
+    // Process the first oscillator
+    juce::dsp::AudioBlock<float> audioBlock1{ synthBuffer };
+    osc.getNextAudioBlock(audioBlock1);
+    gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock1));
+
+    // Process the second oscillator
+    juce::dsp::AudioBlock<float> audioBlock2{ synthBuffer };
+    osc2.getNextAudioBlock(audioBlock2);
+    gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock2));
+
+    // Apply ADSR envelope to the combined buffer
     adsr.applyEnvelopeToBuffer(synthBuffer, 0, synthBuffer.getNumSamples());
-    
+
     for (int channel = 0; channel < outputBuffer.getNumChannels(); ++channel) {
         outputBuffer.addFrom(channel, startSample, synthBuffer, channel, 0, numSamples);
-        
+
         if (!adsr.isActive()) {
             clearCurrentNote();
         }

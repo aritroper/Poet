@@ -10,8 +10,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "UI/ADSRComponent.h"
-#include "UI/OscComponent.h"
+#include "UI/VoiceComponent.h"
 
 //==============================================================================
 /**
@@ -25,12 +24,15 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+    
+    void makeVoiceButtons();
+    void loadVoice(int voice);
 
 private:
+    juce::OwnedArray<juce::TextButton> voiceButtons;
     juce::Slider gainSlider;
     SynthTalkAudioProcessor& audioProcessor;
-    OscComponent osc;
-    AdsrComponent adsr;
+    VoiceComponent voice;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SynthTalkAudioProcessorEditor)
 };

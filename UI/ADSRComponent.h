@@ -21,10 +21,13 @@ public:
     AdsrComponent(juce::AudioProcessorValueTreeState& apvts);
     ~AdsrComponent() override;
 
+    void setVoice(int voice);
     void paint (juce::Graphics&) override;
     void resized() override;
 
 private:
+    juce::AudioProcessorValueTreeState& apvts;
+    
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     
     juce::Slider attackSlider;
@@ -38,7 +41,7 @@ private:
     std::unique_ptr<SliderAttachment> sustainAttachment;
     std::unique_ptr<SliderAttachment> releaseAttachment;
     
-    void setSliderParams(juce::Slider& slider);
+    void makeSlider(juce::Slider& slider);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AdsrComponent)
 };

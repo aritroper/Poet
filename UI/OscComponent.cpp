@@ -12,25 +12,34 @@
 #include "OscComponent.h"
 
 //==============================================================================
-OscComponent::OscComponent(juce::AudioProcessorValueTreeState& apvts, juce::String waveSelectorId, juce::String fmFreqId, juce::String fmDepthId)
+OscComponent::OscComponent(juce::AudioProcessorValueTreeState& apvts) : apvts(apvts)
 {
     juce::StringArray choices { "Sin", "Saw", "Square" };
     oscWaveSelector.addItemList(choices, 1);
     addAndMakeVisible(oscWaveSelector);
     
-    oscWaveSelectorAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(apvts, waveSelectorId, oscWaveSelector);
-    
-    setSliderWithLabel(fmFreqSlider, fmFreqLabel, apvts, fmFreqId, fmFreqAttachment);
-    setSliderWithLabel(fmDepthSlider, fmDepthLabel, apvts, fmDepthId, fmDepthAttachment);
+    makeSliderWithLabel(fmFreqSlider, fmFreqLabel);
+    makeSliderWithLabel(fmDepthSlider, fmDepthLabel);
 }
 
 OscComponent::~OscComponent()
 {
 }
 
-void OscComponent::paint (juce::Graphics& g)
+void OscComponent::paint(juce::Graphics& g)
 {
+    // Fill the entire component with black
     g.fillAll(juce::Colours::black);
+
+    // Get the bounds of the component
+    juce::Rectangle<int> bounds = getLocalBounds();
+
+    // Define the border thickness
+    int borderThickness = 2;
+
+    // Draw a rectangle with a white border
+    g.setColour(juce::Colours::white);
+    g.drawRect(bounds, borderThickness);
 }
 
 void OscComponent::resized()
@@ -50,15 +59,33 @@ void OscComponent::resized()
 
 using Attachment = juce::AudioProcessorValueTreeState::SliderAttachment;
 
-void OscComponent::setSliderWithLabel(juce::Slider& slider, juce::Label& label, juce::AudioProcessorValueTreeState& apvts, juce::String paramId, std::unique_ptr<Attachment>& attachment) {
+void OscComponent::makeSliderWithLabel(juce::Slider& slider, juce::Label& label) {
     slider.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     slider.setTextBoxStyle(juce::Slider::TextBoxBelow, true, 50, 25);
     addAndMakeVisible(slider);
-    
-    attachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(apvts, paramId, slider);
     
     slider.setColour(juce::Label::ColourIds::textColourId, juce::Colours::white);
     label.setFont(15.0f);
     label.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(label);
+}
+
+void OscComponent::setVoice(int voice) {
+    using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+    
+    if (oscWaveSelectorAttachment != nullptr)
+        oscWaveSelectorAttachment.reset();
+
+    if (fmFreqAttachment != nullptr)
+        fmFreqAttachment.reset();
+
+    if (fmDepthAttachment != nullptr)
+        fmDepthAttachment.reset();
+
+    juce::String voiceStr = juce::String(voice);
+    
+    oscWaveSelectorAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(apvts, "OSCWAVETYPE" + voiceStr, oscWaveSelector);
+
+    fmFreqAttachment = std::make_unique<SliderAttachment>(apvts, "OSCFMFREQ" + voiceStr, fmFreqSlider);
+    fmDepthAttachment = std::make_unique<SliderAttachment>(apvts, "OSCFMDEPTH" + voiceStr, fmDepthSlider);
 }

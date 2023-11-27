@@ -19,7 +19,7 @@ class SynthTalkAudioProcessor  : public juce::AudioProcessor
 {
 public:
     //==============================================================================
-    SynthTalkAudioProcessor();
+    SynthTalkAudioProcessor(int numberOfVoices);
     ~SynthTalkAudioProcessor() override;
 
     //==============================================================================
@@ -56,10 +56,11 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
     
     juce::AudioProcessorValueTreeState apvts;
+    int numberOfVoices;
 
 private:
     juce::Synthesiser synth;
-    juce::AudioProcessorValueTreeState::ParameterLayout createParams();
+    juce::AudioProcessorValueTreeState::ParameterLayout createParams(int numberOfVoices);
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SynthTalkAudioProcessor)
