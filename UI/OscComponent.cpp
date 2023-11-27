@@ -18,8 +18,9 @@ OscComponent::OscComponent(juce::AudioProcessorValueTreeState& apvts) : apvts(ap
     oscWaveSelector.addItemList(choices, 1);
     addAndMakeVisible(oscWaveSelector);
     
-    makeSliderWithLabel(fmFreqSlider, fmFreqLabel);
-    makeSliderWithLabel(fmDepthSlider, fmDepthLabel);
+    makeSliderWithLabel(oscOctaveSlider, oscOctaveLabel);
+    makeSliderWithLabel(oscSemiSlider, oscSemiLabel);
+    makeSliderWithLabel(oscDetuneSlider, oscDetuneLabel);
 }
 
 OscComponent::~OscComponent()
@@ -45,16 +46,19 @@ void OscComponent::paint(juce::Graphics& g)
 void OscComponent::resized()
 {
     
-    const auto sliderWidth = 100;
+    const auto sliderWidth = 60;
     const auto sliderHeight = 90;
     
     oscWaveSelector.setBounds(0, 0, 90, 20);
     
-    fmFreqSlider.setBounds(0, 80, sliderWidth, sliderHeight);
-    fmFreqLabel.setBounds(fmFreqSlider.getX(), fmFreqSlider.getY() - 20, fmFreqSlider.getWidth(), 20);
+    oscOctaveSlider.setBounds(0, 80, sliderWidth, sliderHeight);
+    oscOctaveLabel.setBounds(oscOctaveSlider.getX(), oscOctaveSlider.getY() - 20, oscOctaveSlider.getWidth(), 20);
     
-    fmDepthSlider.setBounds(fmFreqSlider.getRight(), 80, sliderWidth, sliderHeight);
-    fmDepthLabel.setBounds(fmDepthSlider.getX(), fmDepthSlider.getY() - 20, fmDepthSlider.getWidth(), 20);
+    oscSemiSlider.setBounds(oscOctaveSlider.getRight(), 80, sliderWidth, sliderHeight);
+    oscSemiLabel.setBounds(oscSemiSlider.getX(), oscSemiSlider.getY() - 20, oscSemiSlider.getWidth(), 20);
+    
+    oscDetuneSlider.setBounds(oscSemiSlider.getRight(), 80, sliderWidth, sliderHeight);
+    oscDetuneLabel.setBounds(oscDetuneSlider.getX(), oscDetuneSlider.getY() - 20, oscDetuneSlider.getWidth(), 20);
 }
 
 using Attachment = juce::AudioProcessorValueTreeState::SliderAttachment;
@@ -70,7 +74,7 @@ void OscComponent::makeSliderWithLabel(juce::Slider& slider, juce::Label& label)
     addAndMakeVisible(label);
 }
 
-void OscComponent::setVoice(int voice) {
+void OscComponent::setOsc(int osc) {
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     
     if (oscWaveSelectorAttachment != nullptr)
@@ -81,11 +85,24 @@ void OscComponent::setVoice(int voice) {
 
     if (fmDepthAttachment != nullptr)
         fmDepthAttachment.reset();
-
-    juce::String voiceStr = juce::String(voice);
     
-    oscWaveSelectorAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(apvts, "OSCWAVETYPE" + voiceStr, oscWaveSelector);
+    if (oscOctaveAttachment != nullptr)
+        oscOctaveAttachment.reset();
+    
+    if (oscSemiAttachment != nullptr)
+        oscSemiAttachment.reset();
+    
+    if (oscDetuneAttachment != nullptr)
+        oscDetuneAttachment.reset();
 
-    fmFreqAttachment = std::make_unique<SliderAttachment>(apvts, "OSCFMFREQ" + voiceStr, fmFreqSlider);
-    fmDepthAttachment = std::make_unique<SliderAttachment>(apvts, "OSCFMDEPTH" + voiceStr, fmDepthSlider);
+    juce::String oscStr = juce::String(osc);
+    
+    oscWaveSelectorAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(apvts, "OSCWAVETYPE" + oscStr, oscWaveSelector);
+
+    fmFreqAttachment = std::make_unique<SliderAttachment>(apvts, "OSCFMFREQ" + oscStr, fmFreqSlider);
+    fmDepthAttachment = std::make_unique<SliderAttachment>(apvts, "OSCFMDEPTH" + oscStr, fmDepthSlider);
+    
+    oscOctaveAttachment = std::make_unique<SliderAttachment>(apvts, "OSCOCTAVE" + oscStr, oscOctaveSlider);
+    oscSemiAttachment = std::make_unique<SliderAttachment>(apvts, "OSCSEMI" + oscStr, oscSemiSlider);
+    oscDetuneAttachment =  std::make_unique<SliderAttachment>(apvts, "OSCDETUNE" + oscStr, oscDetuneSlider);
 }

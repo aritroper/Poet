@@ -18,7 +18,6 @@ SynthTalkAudioProcessorEditor::SynthTalkAudioProcessorEditor (SynthTalkAudioProc
     
     setSize (460, 300);
     addAndMakeVisible(voice);
-    makeVoiceButtons();
 }
 
 SynthTalkAudioProcessorEditor::~SynthTalkAudioProcessorEditor()
@@ -34,27 +33,5 @@ void SynthTalkAudioProcessorEditor::paint (juce::Graphics& g)
 
 void SynthTalkAudioProcessorEditor::resized()
 {
-    voice.setBounds(0, 40, 460, 200);
-}
-
-void SynthTalkAudioProcessorEditor::makeVoiceButtons() {
-    const int buttonWidth = 60;
-    const int buttonHeight = 20;
-    const int buttonPadding = 5;
-    int x = buttonPadding;
-
-    for (int i = 0; i < audioProcessor.numberOfVoices; ++i)
-    {
-        auto* button = new juce::TextButton("Voice " + juce::String(i + 1));
-        button->setBounds(x, buttonPadding, buttonWidth, buttonHeight);
-        button->onClick = [this, i] { loadVoice(i); };
-        addAndMakeVisible(button);
-        voiceButtons.add(button);
-
-        x += buttonWidth + buttonPadding;
-    }
-}
-
-void SynthTalkAudioProcessorEditor::loadVoice(int voiceIndex) {
-    voice.setVoice(voiceIndex);
+    voice.setBounds(0, 20, 460, 250);
 }

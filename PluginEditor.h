@@ -24,12 +24,8 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
-    
-    void makeVoiceButtons();
-    void loadVoice(int voice);
 
 private:
-    juce::OwnedArray<juce::TextButton> voiceButtons;
     juce::Slider gainSlider;
     SynthTalkAudioProcessor& audioProcessor;
     VoiceComponent voice;

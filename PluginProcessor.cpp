@@ -19,7 +19,7 @@ SynthTalkAudioProcessor::SynthTalkAudioProcessor(int numberOfVoices)
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       ), apvts(*this, nullptr, "Parameters", createParams(numberOfVoices)), numberOfVoices(numberOfVoices)
+                       ), apvts(*this, nullptr, "Parameters", createParams()), numberOfVoices(numberOfVoices)
 
 #endif
 {
@@ -156,23 +156,29 @@ void SynthTalkAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     for (int i = 0; i < synth.getNumVoices(); ++i) {
         if (auto voice = dynamic_cast<SynthVoice*>(synth.getVoice(i))) {
-            juce::String voiceStr = juce::String(i);
             
-            auto &attack = *apvts.getRawParameterValue("ATTACK" + voiceStr);
-            auto &decay = *apvts.getRawParameterValue("DECAY" + voiceStr);
-            auto &sustain = *apvts.getRawParameterValue("SUSTAIN" + voiceStr);
-            auto &release = *apvts.getRawParameterValue("RELEASE" + voiceStr);
+//            auto &attack = *apvts.getRawParameterValue("ATTACK" + voiceStr);
+//            auto &decay = *apvts.getRawParameterValue("DECAY" + voiceStr);
+//            auto &sustain = *apvts.getRawParameterValue("SUSTAIN" + voiceStr);
+//            auto &release = *apvts.getRawParameterValue("RELEASE" + voiceStr);
 
-            auto &oscWaveType = *apvts.getRawParameterValue("OSCWAVETYPE" + voiceStr);
+            // Oscillators
+            for (int osc = 0; osc < 5; ++osc) {
+                juce::String oscStr = juce::String(osc);
+                
+                auto &oscWaveType = *apvts.getRawParameterValue("OSCWAVETYPE" + oscStr);
+                
+                auto &oscOctave = *apvts.getRawParameterValue("OSCOCTAVE" + oscStr);
+                auto &oscSemi = *apvts.getRawParameterValue("OSCSEMI" + oscStr);
+                auto &oscDetune = *apvts.getRawParameterValue("OSCDETUNE" + oscStr);
 
-            auto &fmDepth = *apvts.getRawParameterValue("OSCFMDEPTH" + voiceStr);
-            auto &fmFreq = *apvts.getRawParameterValue("OSCFMFREQ" + voiceStr);
-
-            // UPDATE HERE
-            for (int i = 0; i < 5; ++i) {
-                voice->getOscillator(i).setWaveType(oscWaveType);
-                voice->getOscillator(i).setFMParams(fmDepth.load(), fmFreq.load());
-                voice->update(attack.load(), decay.load(), sustain.load(), release.load());
+                auto &fmDepth = *apvts.getRawParameterValue("OSCFMDEPTH" + oscStr);
+                auto &fmFreq = *apvts.getRawParameterValue("OSCFMFREQ" + oscStr);
+                
+                voice->getOscillator(osc).setWaveType(oscWaveType);
+                voice->getOscillator(osc).setOscParams(oscOctave.load(), oscSemi.load(), oscDetune.load());
+                // voice->getOscillator(osc).setFMParams(fmDepth.load(), fmFreq.load());
+                // voice->update(attack.load(), decay.load(), sustain.load(), release.load());
             }
         }
     }
@@ -215,26 +221,31 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 
 // Value Tree
 
-juce::AudioProcessorValueTreeState::ParameterLayout SynthTalkAudioProcessor::createParams(int numberOfVoices) {
+juce::AudioProcessorValueTreeState::ParameterLayout SynthTalkAudioProcessor::createParams() {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
 
     int paramId = 0;
     
-    for (int voice = 0; voice < numberOfVoices; ++voice) {
-        juce::String voiceStr = juce::String(voice);
+    for (int osc = 0; osc < 5; ++osc) {
+        juce::String oscStr = juce::String(osc);
 
         auto addParam = [&](const juce::String& name, const juce::String& label, const juce::NormalisableRange<float>& range, float defaultValue = 0.0f) {
             ++paramId;
             params.push_back(std::make_unique<juce::AudioParameterFloat>(
-                juce::ParameterID(name + voiceStr, paramId),
+                juce::ParameterID(name + oscStr, paramId),
                 label, range, defaultValue));
         };
 
         // OSC Select
         params.push_back(std::make_unique<juce::AudioParameterChoice>(
-            juce::ParameterID("OSCWAVETYPE" + voiceStr, paramId),
+            juce::ParameterID("OSCWAVETYPE" + oscStr, paramId),
             "Osc Wave Type",
             juce::StringArray { "Sine", "Saw", "Square" }, 0, ""));
+        
+        // OSC
+        addParam("OSCOCTAVE", "Octave", { -4.0f, 4.0f, 1.0f }, 0.0f);  // Octave can be from -4 to 4
+        addParam("OSCSEMI", "Semi", { -12.0f, 12.0f, 1.0f }, 0.0f);   // Semi notes away
+        addParam("OSCDETUNE", "Detune", { -100.0f, 100.0f, 1.0f }, 0.0f);  // Detune in cents
 
         // FM
         addParam("OSCFMFREQ", "FM Frequency", { 0.0f, 1000.0f, 0.01f, 0.3f }, 5.0f);

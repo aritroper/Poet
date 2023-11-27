@@ -17,9 +17,10 @@ VoiceComponent::VoiceComponent(juce::AudioProcessorValueTreeState& apvts) : osc 
     // In your constructor, you should add any child components, and
     // initialise any special settings that your component needs.
 
+    makeOscButtons();
     addAndMakeVisible(adsr);
     addAndMakeVisible(osc);
-    setVoice(0);
+    setOsc(0);
 }
 
 VoiceComponent::~VoiceComponent()
@@ -43,11 +44,30 @@ void VoiceComponent::resized()
     // This method is where you should set the bounds of any child
     // components that your component contains..
     const auto modulePadding = 20;
-    osc.setBounds(modulePadding, 0, 200, 200);
-    adsr.setBounds(osc.getRight() + modulePadding, 0, 200, 200);
+    osc.setBounds(modulePadding, 40, 200, 200);
+    adsr.setBounds(osc.getRight() + modulePadding, 40, 200, 200);
 }
 
-void VoiceComponent::setVoice(int voice) {
-    adsr.setVoice(voice);
-    osc.setVoice(voice);
+
+void VoiceComponent::makeOscButtons() {
+    const int buttonWidth = 60;
+    const int buttonHeight = 20;
+    const int buttonPadding = 5;
+    int x = 20;
+
+    for (int i = 0; i < 5; ++i)
+    {
+        auto* button = new juce::TextButton("Osc " + juce::String(i + 1));
+        button->setBounds(x, buttonPadding, buttonWidth, buttonHeight);
+        button->onClick = [this, i] { setOsc(i); };
+        addAndMakeVisible(button);
+        oscButtons.add(button);
+
+        x += buttonWidth + buttonPadding;
+    }
+}
+
+void VoiceComponent::setOsc(int osc) {
+    this->adsr.setOsc(osc);
+    this->osc.setOsc(osc);
 }

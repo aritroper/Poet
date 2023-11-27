@@ -24,7 +24,7 @@ AdsrComponent::~AdsrComponent()
 {
 }
 
-void AdsrComponent::setVoice(int voice) {
+void AdsrComponent::setOsc(int osc) {
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
 
     if (attackAttachment != nullptr)
@@ -39,12 +39,12 @@ void AdsrComponent::setVoice(int voice) {
     if (releaseAttachment != nullptr)
         releaseAttachment.reset();
 
-    juce::String voiceStr = juce::String(voice);
+    juce::String oscStr = juce::String(osc);
 
-    attackAttachment = std::make_unique<SliderAttachment>(apvts, "ATTACK" + voiceStr, attackSlider);
-    decayAttachment = std::make_unique<SliderAttachment>(apvts, "DECAY" + voiceStr, decaySlider);
-    sustainAttachment = std::make_unique<SliderAttachment>(apvts, "SUSTAIN" + voiceStr, sustainSlider);
-    releaseAttachment = std::make_unique<SliderAttachment>(apvts, "RELEASE" + voiceStr, releaseSlider);
+    attackAttachment = std::make_unique<SliderAttachment>(apvts, "ATTACK" + oscStr, attackSlider);
+    decayAttachment = std::make_unique<SliderAttachment>(apvts, "DECAY" + oscStr, decaySlider);
+    sustainAttachment = std::make_unique<SliderAttachment>(apvts, "SUSTAIN" + oscStr, sustainSlider);
+    releaseAttachment = std::make_unique<SliderAttachment>(apvts, "RELEASE" + oscStr, releaseSlider);
 }
 
 void AdsrComponent::paint (juce::Graphics& g)

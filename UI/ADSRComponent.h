@@ -21,7 +21,7 @@ public:
     AdsrComponent(juce::AudioProcessorValueTreeState& apvts);
     ~AdsrComponent() override;
 
-    void setVoice(int voice);
+    void setOsc(int osc);
     void paint (juce::Graphics&) override;
     void resized() override;
 

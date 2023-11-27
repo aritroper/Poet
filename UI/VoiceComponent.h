@@ -23,11 +23,16 @@ public:
     VoiceComponent(juce::AudioProcessorValueTreeState& apvts);
     ~VoiceComponent() override;
 
-    void setVoice(int voice);
+    void setOsc(int osc);
     void paint (juce::Graphics&) override;
     void resized() override;
+    
+    void makeOscButtons();
+    void loadOsc(int osc);
 
 private:
+    juce::OwnedArray<juce::TextButton> oscButtons;
+    
     OscComponent osc;
     AdsrComponent adsr;
     

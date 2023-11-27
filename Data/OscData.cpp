@@ -15,6 +15,14 @@ void OscData::prepareToPlay(juce::dsp::ProcessSpec& spec) {
     prepare(spec);
 }
 
+float OscData::getFrequency() {
+    float frequencyMultiplier = std::pow(2.0f, static_cast<float>(oscOctave) + oscSemi / 12.0f);
+    float detuneFactor = std::pow(2.0f, oscDetune / 1200.0f);
+    float freq = juce::MidiMessage::getMidiNoteInHertz(lastMidiNote) * frequencyMultiplier * detuneFactor + fmMod;
+    freq += std::abs(std::min(0.0f, freq));
+    return freq;
+}
+
 void OscData::setWaveType(const int waveType) {
     switch (waveType) {
         case 0:
@@ -33,22 +41,21 @@ void OscData::setWaveType(const int waveType) {
 }
 
 void OscData::setWaveFrequency(const int midiNoteNumber) {
-    setFrequency(juce::MidiMessage::getMidiNoteInHertz(midiNoteNumber) + fmMod);
     lastMidiNote = midiNoteNumber;
+    setFrequency(getFrequency());
+}
+
+void OscData::setOscParams(const int octave, const int semi, const float detune) {
+    oscOctave = octave;
+    oscSemi = semi;
+    oscDetune = detune;
+    setFrequency(getFrequency());
 }
 
 void OscData::setFMParams(const float depth, const float frequency) {
     fmOsc.setFrequency(frequency);
     fmDepth = depth;
-
-    // Calculate the modulated frequency
-    float modulatedFrequency = juce::MidiMessage::getMidiNoteInHertz(lastMidiNote) + fmMod;
-
-    // Add a DC offset to keep the frequency positive
-    modulatedFrequency += std::abs(std::min(0.0f, modulatedFrequency));
-
-    // Set the frequency
-    setFrequency(modulatedFrequency);
+    setFrequency(getFrequency());
 }
 
 void OscData::getNextAudioBlock(juce::dsp::AudioBlock<float>& block) {

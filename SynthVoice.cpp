@@ -15,8 +15,9 @@ bool SynthVoice::canPlaySound (juce::SynthesiserSound* sound) {
 }
 
 void SynthVoice::startNote (int midiNoteNumber, float velocity, juce::SynthesiserSound *sound, int currentPitchWheelPosition) {
-    osc.setWaveFrequency(midiNoteNumber);
-    osc2.setWaveFrequency(midiNoteNumber + 5);
+    for (int osc = 0; osc < 5; ++osc) {
+        oscillators[osc].setWaveFrequency(midiNoteNumber);
+    }
     adsr.noteOn();
 }
 
@@ -44,12 +45,12 @@ void SynthVoice::prepareToPlay(double sampleRate, int samplesPerBlock, int outpu
     spec.sampleRate = sampleRate;
     spec.numChannels = outputChannels;
     
-    osc.prepareToPlay(spec);
-    osc2.prepareToPlay(spec);
+    for (int i = 0; i < 5; ++i) {
+        oscillators[i].prepareToPlay(spec);
+        oscillators[i].setFrequency(440.0f); // You can set different frequencies here if needed
+    }
+
     gain.prepare(spec);
-    
-    osc.setFrequency(440.0f);
-    osc2.setFrequency(440.0f);
     gain.setGainLinear(0.3f);
     
     isPrepared = true;
@@ -68,16 +69,13 @@ void SynthVoice::renderNextBlock(juce::AudioBuffer<float> &outputBuffer, int sta
 
     synthBuffer.setSize(outputBuffer.getNumChannels(), numSamples, false, false, true);
     synthBuffer.clear();
-
-    // Process the first oscillator
-    juce::dsp::AudioBlock<float> audioBlock1{ synthBuffer };
-    osc.getNextAudioBlock(audioBlock1);
-    gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock1));
-
-    // Process the second oscillator
-    juce::dsp::AudioBlock<float> audioBlock2{ synthBuffer };
-    osc2.getNextAudioBlock(audioBlock2);
-    gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock2));
+    
+    for (int osc = 0; osc < 5; ++osc) {
+        // Process the first oscillator
+        juce::dsp::AudioBlock<float> audioBlock{ synthBuffer };
+        oscillators[osc].getNextAudioBlock(audioBlock);
+        gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    }
 
     // Apply ADSR envelope to the combined buffer
     adsr.applyEnvelopeToBuffer(synthBuffer, 0, synthBuffer.getNumSamples());
