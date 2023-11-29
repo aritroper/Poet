@@ -8,6 +8,7 @@
 
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "Data/SynthData.h"
 
 //==============================================================================
 SynthTalkAudioProcessor::SynthTalkAudioProcessor(int numberOfVoices)
@@ -100,7 +101,7 @@ void SynthTalkAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 {
     synth.setCurrentPlaybackSampleRate(sampleRate);
     
-    for (int i = 0; i < synth.getNumVoices(); i++) {
+    for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
         if (auto voice = dynamic_cast<SynthVoice*>(synth.getVoice((i)))) {
             voice->prepareToPlay(sampleRate, samplesPerBlock, getTotalNumOutputChannels());
         }
@@ -154,31 +155,35 @@ void SynthTalkAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    for (int i = 0; i < synth.getNumVoices(); ++i) {
+    for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
         if (auto voice = dynamic_cast<SynthVoice*>(synth.getVoice(i))) {
-            
-//            auto &attack = *apvts.getRawParameterValue("ATTACK" + voiceStr);
-//            auto &decay = *apvts.getRawParameterValue("DECAY" + voiceStr);
-//            auto &sustain = *apvts.getRawParameterValue("SUSTAIN" + voiceStr);
-//            auto &release = *apvts.getRawParameterValue("RELEASE" + voiceStr);
-
-            // Oscillators
-            for (int osc = 0; osc < 5; ++osc) {
+            for (int osc = 0; osc < NUMBER_OF_OSCILLATORS; ++osc) {
                 juce::String oscStr = juce::String(osc);
                 
+                // OSC
                 auto &oscWaveType = *apvts.getRawParameterValue("OSCWAVETYPE" + oscStr);
                 
+                auto &oscOn = *apvts.getRawParameterValue("OSCON" + oscStr);
                 auto &oscOctave = *apvts.getRawParameterValue("OSCOCTAVE" + oscStr);
                 auto &oscSemi = *apvts.getRawParameterValue("OSCSEMI" + oscStr);
                 auto &oscDetune = *apvts.getRawParameterValue("OSCDETUNE" + oscStr);
+                auto &oscGain = *apvts.getRawParameterValue("OSCGAIN" + oscStr);
 
+                // ADSR
+                auto &attack = *apvts.getRawParameterValue("ATTACK" + oscStr);
+                auto &decay = *apvts.getRawParameterValue("DECAY" + oscStr);
+                auto &sustain = *apvts.getRawParameterValue("SUSTAIN" + oscStr);
+                auto &release = *apvts.getRawParameterValue("RELEASE" + oscStr);
+                
+                // FM
                 auto &fmDepth = *apvts.getRawParameterValue("OSCFMDEPTH" + oscStr);
                 auto &fmFreq = *apvts.getRawParameterValue("OSCFMFREQ" + oscStr);
                 
                 voice->getOscillator(osc).setWaveType(oscWaveType);
-                voice->getOscillator(osc).setOscParams(oscOctave.load(), oscSemi.load(), oscDetune.load());
+                voice->getOscillator(osc).setOscOn(oscOn.load());
+                voice->getOscillator(osc).setOscParams(oscOctave.load(), oscSemi.load(), oscDetune.load(), oscGain.load());
+                voice->getOscillator(osc).setADSR(attack.load(), decay.load(), sustain.load(), release.load());
                 // voice->getOscillator(osc).setFMParams(fmDepth.load(), fmFreq.load());
-                // voice->update(attack.load(), decay.load(), sustain.load(), release.load());
             }
         }
     }
@@ -216,7 +221,7 @@ void SynthTalkAudioProcessor::setStateInformation (const void* data, int sizeInB
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new SynthTalkAudioProcessor(5);
+    return new SynthTalkAudioProcessor(NUMBER_OF_VOICES);
 }
 
 // Value Tree
@@ -226,7 +231,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout SynthTalkAudioProcessor::cre
 
     int paramId = 0;
     
-    for (int osc = 0; osc < 5; ++osc) {
+    for (int osc = 0; osc < NUMBER_OF_OSCILLATORS; ++osc) {
         juce::String oscStr = juce::String(osc);
 
         auto addParam = [&](const juce::String& name, const juce::String& label, const juce::NormalisableRange<float>& range, float defaultValue = 0.0f) {
@@ -243,9 +248,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout SynthTalkAudioProcessor::cre
             juce::StringArray { "Sine", "Saw", "Square" }, 0, ""));
         
         // OSC
+        params.push_back(std::make_unique<juce::AudioParameterBool>(juce::ParameterID("OSCON" + oscStr, ++paramId), "Osc on", false));
+        
         addParam("OSCOCTAVE", "Octave", { -4.0f, 4.0f, 1.0f }, 0.0f);  // Octave can be from -4 to 4
         addParam("OSCSEMI", "Semi", { -12.0f, 12.0f, 1.0f }, 0.0f);   // Semi notes away
         addParam("OSCDETUNE", "Detune", { -100.0f, 100.0f, 1.0f }, 0.0f);  // Detune in cents
+        addParam("OSCGAIN", "Gain", { 0.0f, 1.0f, 0.01f }, 0.5f);
 
         // FM
         addParam("OSCFMFREQ", "FM Frequency", { 0.0f, 1000.0f, 0.01f, 0.3f }, 5.0f);
@@ -256,9 +264,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout SynthTalkAudioProcessor::cre
         addParam("DECAY", "Decay", { 0.1f, 1.0f, 0.1f }, 0.1f);
         addParam("SUSTAIN", "Sustain", { 0.1f, 1.0f, 0.1f }, 1.0f);
         addParam("RELEASE", "Release", { 0.1f, 3.0f, 0.1f }, 0.4f);
-
-        // GAIN
-        addParam("GAIN", "Gain", { 0.0f, 1.0f, 0.01f }, 0.5f);
     }
 
     return { params.begin(), params.end() };

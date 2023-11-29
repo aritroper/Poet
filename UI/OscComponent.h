@@ -29,8 +29,11 @@ private:
     juce::AudioProcessorValueTreeState& apvts;
     
     juce::ComboBox oscWaveSelector;
+    juce::TextButton oscOnButton;
+    
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> oscWaveSelectorAttachment;
     
+    juce::Slider oscGainSlider;
     juce::Slider oscOctaveSlider;
     juce::Slider oscSemiSlider;
     juce::Slider oscDetuneSlider;
@@ -38,21 +41,26 @@ private:
     juce::Slider fmFreqSlider;
     juce::Slider fmDepthSlider;
     
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> oscOctaveAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> oscSemiAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> oscDetuneAttachment;
+    using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+    using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
     
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> fmFreqAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> fmDepthAttachment;
+    std::unique_ptr<ButtonAttachment> oscOnAttachment;
     
+    std::unique_ptr<SliderAttachment> oscGainAttachment;
+    std::unique_ptr<SliderAttachment> oscOctaveAttachment;
+    std::unique_ptr<SliderAttachment> oscSemiAttachment;
+    std::unique_ptr<SliderAttachment> oscDetuneAttachment;
+    
+    std::unique_ptr<SliderAttachment> fmFreqAttachment;
+    std::unique_ptr<SliderAttachment> fmDepthAttachment;
+    
+    juce::Label oscGainLabel { "Gain", "Gain" };
     juce::Label oscOctaveLabel { "Octave", "Octave" };
     juce::Label oscSemiLabel { "Semi", "Semi" };
     juce::Label oscDetuneLabel { "Detune", "Detune" };
     
     juce::Label fmFreqLabel { "FM Freq", "FM Freq" };
     juce::Label fmDepthLabel { "FM Depth", "FM Depth" };
-    
-    using Attachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     
     void makeSliderWithLabel (juce::Slider& slider, juce::Label& label);
     

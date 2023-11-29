@@ -12,15 +12,32 @@
 #include "OscComponent.h"
 
 //==============================================================================
-OscComponent::OscComponent(juce::AudioProcessorValueTreeState& apvts) : apvts(apvts)
+OscComponent::OscComponent(juce::AudioProcessorValueTreeState& apvts) : apvts(apvts), oscOnButton("On")
 {
     juce::StringArray choices { "Sin", "Saw", "Square" };
     oscWaveSelector.addItemList(choices, 1);
     addAndMakeVisible(oscWaveSelector);
     
+    oscOnButton.setClickingTogglesState(true);
+    oscOnButton.onClick = [this]()
+    {
+        if (oscOnButton.getToggleState())
+        {
+            oscOnButton.setButtonText("On");
+            // Additional logic for when the button is toggled on
+        }
+        else
+        {
+            oscOnButton.setButtonText("Off");
+            // Additional logic for when the button is toggled off
+        }
+    };
+    addAndMakeVisible(oscOnButton);
+    
     makeSliderWithLabel(oscOctaveSlider, oscOctaveLabel);
     makeSliderWithLabel(oscSemiSlider, oscSemiLabel);
     makeSliderWithLabel(oscDetuneSlider, oscDetuneLabel);
+    makeSliderWithLabel(oscGainSlider, oscGainLabel);
 }
 
 OscComponent::~OscComponent()
@@ -46,10 +63,12 @@ void OscComponent::paint(juce::Graphics& g)
 void OscComponent::resized()
 {
     
-    const auto sliderWidth = 60;
-    const auto sliderHeight = 90;
+    const auto sliderWidth = 50;
+    const auto sliderHeight = 80;
     
     oscWaveSelector.setBounds(0, 0, 90, 20);
+    
+    oscOnButton.setBounds(oscWaveSelector.getRight() + 20, 0, 90, 20);
     
     oscOctaveSlider.setBounds(0, 80, sliderWidth, sliderHeight);
     oscOctaveLabel.setBounds(oscOctaveSlider.getX(), oscOctaveSlider.getY() - 20, oscOctaveSlider.getWidth(), 20);
@@ -59,6 +78,9 @@ void OscComponent::resized()
     
     oscDetuneSlider.setBounds(oscSemiSlider.getRight(), 80, sliderWidth, sliderHeight);
     oscDetuneLabel.setBounds(oscDetuneSlider.getX(), oscDetuneSlider.getY() - 20, oscDetuneSlider.getWidth(), 20);
+    
+    oscGainSlider.setBounds(oscDetuneSlider.getRight(), 80, sliderWidth, sliderHeight);
+    oscGainLabel.setBounds(oscGainSlider.getX(), oscGainSlider.getY() - 20, oscGainSlider.getWidth(), 20);
 }
 
 using Attachment = juce::AudioProcessorValueTreeState::SliderAttachment;
@@ -75,8 +97,6 @@ void OscComponent::makeSliderWithLabel(juce::Slider& slider, juce::Label& label)
 }
 
 void OscComponent::setOsc(int osc) {
-    using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
-    
     if (oscWaveSelectorAttachment != nullptr)
         oscWaveSelectorAttachment.reset();
 
@@ -85,6 +105,12 @@ void OscComponent::setOsc(int osc) {
 
     if (fmDepthAttachment != nullptr)
         fmDepthAttachment.reset();
+    
+    if (oscOnAttachment != nullptr)
+        oscOnAttachment.reset();
+    
+    if (oscGainAttachment != nullptr)
+        oscGainAttachment.reset();
     
     if (oscOctaveAttachment != nullptr)
         oscOctaveAttachment.reset();
@@ -104,5 +130,8 @@ void OscComponent::setOsc(int osc) {
     
     oscOctaveAttachment = std::make_unique<SliderAttachment>(apvts, "OSCOCTAVE" + oscStr, oscOctaveSlider);
     oscSemiAttachment = std::make_unique<SliderAttachment>(apvts, "OSCSEMI" + oscStr, oscSemiSlider);
-    oscDetuneAttachment =  std::make_unique<SliderAttachment>(apvts, "OSCDETUNE" + oscStr, oscDetuneSlider);
+    oscDetuneAttachment = std::make_unique<SliderAttachment>(apvts, "OSCDETUNE" + oscStr, oscDetuneSlider);
+    oscGainAttachment = std::make_unique<SliderAttachment>(apvts, "OSCGAIN" + oscStr, oscGainSlider);
+    
+    oscOnAttachment = std::make_unique<ButtonAttachment>(apvts, "OSCON" + oscStr, oscOnButton);
 }

@@ -11,7 +11,9 @@
 #include "OscData.h"
 
 void OscData::prepareToPlay(juce::dsp::ProcessSpec& spec) {
+    adsr.setSampleRate(spec.sampleRate);
     fmOsc.prepare(spec);
+    gain.prepare(spec);
     prepare(spec);
 }
 
@@ -45,11 +47,16 @@ void OscData::setWaveFrequency(const int midiNoteNumber) {
     setFrequency(getFrequency());
 }
 
-void OscData::setOscParams(const int octave, const int semi, const float detune) {
+void OscData::setOscParams(const int octave, const int semi, const float detune, const float gain) {
     oscOctave = octave;
     oscSemi = semi;
     oscDetune = detune;
+    oscGain = gain;
     setFrequency(getFrequency());
+}
+
+void OscData::setADSR(const float attack, const float decay, const float sustain, const float release) {
+    adsr.updateADSR(attack, decay, sustain, release);
 }
 
 void OscData::setFMParams(const float depth, const float frequency) {
@@ -58,12 +65,34 @@ void OscData::setFMParams(const float depth, const float frequency) {
     setFrequency(getFrequency());
 }
 
-void OscData::getNextAudioBlock(juce::dsp::AudioBlock<float>& block) {
-    for (int ch = 0; ch < block.getNumChannels(); ++ch) {
-        for (int s = 0; s < block.getNumSamples(); ++s) {
-            fmMod = fmOsc.processSample(block.getSample(ch, s)) * fmDepth;
+void OscData::getNextAudioBlock(juce::AudioBuffer<float>& outputBuffer) {
+    if (isOn) {
+        for (int ch = 0; ch < outputBuffer.getNumChannels(); ++ch) {
+            for (int s = 0; s < outputBuffer.getNumSamples(); ++s) {
+                fmMod = fmOsc.processSample(outputBuffer.getSample(ch, s)) * fmDepth;
+                outputBuffer.setSample(ch, s, outputBuffer.getSample(ch, s) * oscGain);
+            }
         }
+        
+        juce::dsp::AudioBlock<float> audioBlock{ outputBuffer };
+        
+        // Osc
+        process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+        
+        // Gain
+        gain.setGainLinear(oscGain);
+        gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+        
+        // Adsr
+        adsr.applyEnvelopeToBuffer(outputBuffer, 0, outputBuffer.getNumSamples());
     }
-    process(juce::dsp::ProcessContextReplacing<float> (block));
+}
+
+void OscData::startNote() {
+    adsr.noteOn();
+}
+
+void OscData::stopNote() {
+    adsr.noteOff();
 }
 

@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "VoiceComponent.h"
+#include "../Data/SynthData.h"
 
 //==============================================================================
 VoiceComponent::VoiceComponent(juce::AudioProcessorValueTreeState& apvts) : osc (apvts), adsr(apvts)
@@ -55,7 +56,7 @@ void VoiceComponent::makeOscButtons() {
     const int buttonPadding = 5;
     int x = 20;
 
-    for (int i = 0; i < 5; ++i)
+    for (int i = 0; i < NUMBER_OF_OSCILLATORS; ++i)
     {
         auto* button = new juce::TextButton("Osc " + juce::String(i + 1));
         button->setBounds(x, buttonPadding, buttonWidth, buttonHeight);

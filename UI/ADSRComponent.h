@@ -35,7 +35,6 @@ private:
     juce::Slider sustainSlider;
     juce::Slider releaseSlider;
     
-    std::unique_ptr<SliderAttachment> gainAttachment;
     std::unique_ptr<SliderAttachment> attackAttachment;
     std::unique_ptr<SliderAttachment> decayAttachment;
     std::unique_ptr<SliderAttachment> sustainAttachment;
