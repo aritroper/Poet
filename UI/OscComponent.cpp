@@ -12,7 +12,7 @@
 #include "OscComponent.h"
 
 //==============================================================================
-OscComponent::OscComponent(juce::AudioProcessorValueTreeState& apvts) : apvts(apvts), oscOnButton("On")
+OscComponent::OscComponent(juce::AudioProcessorValueTreeState& apvts) : apvts(apvts), oscOnButton("Off")
 {
     juce::StringArray choices { "Sin", "Saw", "Square" };
     oscWaveSelector.addItemList(choices, 1);

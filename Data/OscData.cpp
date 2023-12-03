@@ -11,9 +11,11 @@
 #include "OscData.h"
 
 void OscData::prepareToPlay(juce::dsp::ProcessSpec& spec) {
-    adsr.setSampleRate(spec.sampleRate);
+    ampAdsr.setSampleRate(spec.sampleRate);
+    modAdsr.setSampleRate(spec.sampleRate);
     fmOsc.prepare(spec);
     gain.prepare(spec);
+    filter.prepare(spec);
     prepare(spec);
 }
 
@@ -55,8 +57,16 @@ void OscData::setOscParams(const int octave, const int semi, const float detune,
     setFrequency(getFrequency());
 }
 
-void OscData::setADSR(const float attack, const float decay, const float sustain, const float release) {
-    adsr.updateADSR(attack, decay, sustain, release);
+void OscData::setAmpAdsr(const float attack, const float decay, const float sustain, const float release) {
+    ampAdsr.setAdsrParameters(attack, decay, sustain, release);
+}
+
+void OscData::setModAdsr(const float attack, const float decay, const float sustain, const float release) {
+    modAdsr.setAdsrParameters(attack, decay, sustain, release);
+}
+
+void OscData::setFilter(const int filterType, const float cutoffFreq, const float resonance) {
+    filter.setFilterParameters(filterType, cutoffFreq, resonance);
 }
 
 void OscData::setFMParams(const float depth, const float frequency) {
@@ -66,33 +76,31 @@ void OscData::setFMParams(const float depth, const float frequency) {
 }
 
 void OscData::getNextAudioBlock(juce::AudioBuffer<float>& outputBuffer) {
-    if (isOn) {
-        for (int ch = 0; ch < outputBuffer.getNumChannels(); ++ch) {
-            for (int s = 0; s < outputBuffer.getNumSamples(); ++s) {
-                fmMod = fmOsc.processSample(outputBuffer.getSample(ch, s)) * fmDepth;
-                outputBuffer.setSample(ch, s, outputBuffer.getSample(ch, s) * oscGain);
-            }
+    jassert(isOn);
+    
+    juce::dsp::AudioBlock<float> audioBlock{ outputBuffer };
+    
+    // Osc
+    process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    
+    // Gain
+    gain.setGainLinear(oscGain);
+    gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    
+    // Amp adsr
+    ampAdsr.applyEnvelopeToBuffer(outputBuffer, 0, outputBuffer.getNumSamples());
+    
+    for (int ch = 0; ch < outputBuffer.getNumChannels(); ++ch) {
+        for (int s = 0; s < outputBuffer.getNumSamples(); ++s) {
+            // FM
+            // fmMod = fmOsc.processSample(outputBuffer.getSample(ch, s)) * fmDepth;
+            
+            // Filter
+            modulator = modAdsr.getNextSample();
+            filter.setModulator(modulator);
+            const float filterSample = filter.processSample(ch, outputBuffer.getSample(ch, s));
+            outputBuffer.setSample(ch, s, filterSample);
         }
-        
-        juce::dsp::AudioBlock<float> audioBlock{ outputBuffer };
-        
-        // Osc
-        process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-        
-        // Gain
-        gain.setGainLinear(oscGain);
-        gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-        
-        // Adsr
-        adsr.applyEnvelopeToBuffer(outputBuffer, 0, outputBuffer.getNumSamples());
     }
-}
-
-void OscData::startNote() {
-    adsr.noteOn();
-}
-
-void OscData::stopNote() {
-    adsr.noteOff();
 }
 

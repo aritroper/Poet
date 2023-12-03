@@ -13,6 +13,7 @@
 #include <JuceHeader.h>
 #include "ADSRComponent.h"
 #include "OscComponent.h"
+#include "FilterComponent.h"
 
 //==============================================================================
 /*
@@ -34,7 +35,9 @@ private:
     juce::OwnedArray<juce::TextButton> oscButtons;
     
     OscComponent osc;
-    AdsrComponent adsr;
+    AdsrComponent ampEnvelope;
+    FilterComponent filter;
+    AdsrComponent modEnvelope;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VoiceComponent)
 };

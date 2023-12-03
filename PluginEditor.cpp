@@ -16,7 +16,7 @@ SynthTalkAudioProcessorEditor::SynthTalkAudioProcessorEditor (SynthTalkAudioProc
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     
-    setSize (460, 300);
+    setSize (460, 600);
     addAndMakeVisible(voice);
 }
 
@@ -33,5 +33,5 @@ void SynthTalkAudioProcessorEditor::paint (juce::Graphics& g)
 
 void SynthTalkAudioProcessorEditor::resized()
 {
-    voice.setBounds(0, 20, 460, 250);
+    voice.setBounds(0, 20, 460, 600);
 }

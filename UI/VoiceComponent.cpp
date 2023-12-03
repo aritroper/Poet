@@ -13,14 +13,20 @@
 #include "../Data/SynthData.h"
 
 //==============================================================================
-VoiceComponent::VoiceComponent(juce::AudioProcessorValueTreeState& apvts) : osc (apvts), adsr(apvts)
+VoiceComponent::VoiceComponent(juce::AudioProcessorValueTreeState& apvts) :
+    osc (apvts),
+    ampEnvelope(apvts, "AMPATTACK", "AMPDECAY", "AMPSUSTAIN", "AMPRELEASE"),
+    filter(apvts),
+    modEnvelope(apvts, "MODATTACK", "MODDECAY", "MODSUSTAIN", "MODRELEASE")
 {
     // In your constructor, you should add any child components, and
     // initialise any special settings that your component needs.
 
     makeOscButtons();
-    addAndMakeVisible(adsr);
+    addAndMakeVisible(ampEnvelope);
     addAndMakeVisible(osc);
+    addAndMakeVisible(filter);
+    addAndMakeVisible(modEnvelope);
     setOsc(0);
 }
 
@@ -46,7 +52,9 @@ void VoiceComponent::resized()
     // components that your component contains..
     const auto modulePadding = 20;
     osc.setBounds(modulePadding, 40, 200, 200);
-    adsr.setBounds(osc.getRight() + modulePadding, 40, 200, 200);
+    ampEnvelope.setBounds(osc.getRight() + modulePadding, 40, 200, 200);
+    filter.setBounds(modulePadding, osc.getBottom() + modulePadding, 200, 200);
+    modEnvelope.setBounds(filter.getRight() + modulePadding, osc.getBottom() + modulePadding, 200, 200);
 }
 
 
@@ -69,6 +77,8 @@ void VoiceComponent::makeOscButtons() {
 }
 
 void VoiceComponent::setOsc(int osc) {
-    this->adsr.setOsc(osc);
+    this->ampEnvelope.setOsc(osc);
     this->osc.setOsc(osc);
+    this->filter.setOsc(osc);
+    this->modEnvelope.setOsc(osc);
 }

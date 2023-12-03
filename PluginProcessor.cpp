@@ -157,8 +157,8 @@ void SynthTalkAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     for (int i = 0; i < NUMBER_OF_VOICES; ++i) {
         if (auto voice = dynamic_cast<SynthVoice*>(synth.getVoice(i))) {
-            for (int osc = 0; osc < NUMBER_OF_OSCILLATORS; ++osc) {
-                juce::String oscStr = juce::String(osc);
+            for (int oscIdx = 0; oscIdx < NUMBER_OF_OSCILLATORS; ++oscIdx) {
+                juce::String oscStr = juce::String(oscIdx);
                 
                 // OSC
                 auto &oscWaveType = *apvts.getRawParameterValue("OSCWAVETYPE" + oscStr);
@@ -170,19 +170,34 @@ void SynthTalkAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
                 auto &oscGain = *apvts.getRawParameterValue("OSCGAIN" + oscStr);
 
                 // ADSR
-                auto &attack = *apvts.getRawParameterValue("ATTACK" + oscStr);
-                auto &decay = *apvts.getRawParameterValue("DECAY" + oscStr);
-                auto &sustain = *apvts.getRawParameterValue("SUSTAIN" + oscStr);
-                auto &release = *apvts.getRawParameterValue("RELEASE" + oscStr);
+                auto &ampAttack = *apvts.getRawParameterValue("AMPATTACK" + oscStr);
+                auto &ampDecay = *apvts.getRawParameterValue("AMPDECAY" + oscStr);
+                auto &ampSustain = *apvts.getRawParameterValue("AMPSUSTAIN" + oscStr);
+                auto &ampRelease = *apvts.getRawParameterValue("AMPRELEASE" + oscStr);
+                
+                // Filter ADSR
+                auto &modAttack = *apvts.getRawParameterValue("MODATTACK" + oscStr);
+                auto &modDecay = *apvts.getRawParameterValue("MODDECAY" + oscStr);
+                auto &modSustain = *apvts.getRawParameterValue("MODSUSTAIN" + oscStr);
+                auto &modRelease = *apvts.getRawParameterValue("MODRELEASE" + oscStr);
+                
+                // FILTER
+                auto &filterType = *apvts.getRawParameterValue("FILTERTYPE" + oscStr);
+                auto &filterCutoff = *apvts.getRawParameterValue("FILTERCUTOFF" + oscStr);
+                auto &filterRes = *apvts.getRawParameterValue("FILTERRES" + oscStr);
                 
                 // FM
                 auto &fmDepth = *apvts.getRawParameterValue("OSCFMDEPTH" + oscStr);
                 auto &fmFreq = *apvts.getRawParameterValue("OSCFMFREQ" + oscStr);
                 
-                voice->getOscillator(osc).setWaveType(oscWaveType);
-                voice->getOscillator(osc).setOscOn(oscOn.load());
-                voice->getOscillator(osc).setOscParams(oscOctave.load(), oscSemi.load(), oscDetune.load(), oscGain.load());
-                voice->getOscillator(osc).setADSR(attack.load(), decay.load(), sustain.load(), release.load());
+                auto &osc = voice->getOscillator(oscIdx);
+                
+                osc.setWaveType(oscWaveType);
+                osc.setOscOn(oscOn.load());
+                osc.setOscParams(oscOctave.load(), oscSemi.load(), oscDetune.load(), oscGain.load());
+                osc.setAmpAdsr(ampAttack.load(), ampDecay.load(), ampSustain.load(), ampRelease.load());
+                osc.setFilter(filterType.load(), filterCutoff.load(), filterRes.load());
+                osc.setModAdsr(modAttack.load(), modDecay.load(), modSustain.load(), modRelease.load());
                 // voice->getOscillator(osc).setFMParams(fmDepth.load(), fmFreq.load());
             }
         }
@@ -259,11 +274,25 @@ juce::AudioProcessorValueTreeState::ParameterLayout SynthTalkAudioProcessor::cre
         addParam("OSCFMFREQ", "FM Frequency", { 0.0f, 1000.0f, 0.01f, 0.3f }, 5.0f);
         addParam("OSCFMDEPTH", "FM Depth", { 0.0f, 1000.0f, 0.01f, 0.3f }, 50.0f);
 
+        // FILTER
+        params.push_back(std::make_unique<juce::AudioParameterChoice>(
+            juce::ParameterID("FILTERTYPE" + oscStr, paramId),
+            "Filter Type",
+            juce::StringArray { "Low-Pass", "Band-Pass", "High-Pass" }, 0, ""));
+        addParam("FILTERCUTOFF", "Filter Cutoff", { 20.0f, 20000.0f, 0.1f, 0.6f }, 200.0f);
+        addParam("FILTERRES", "Filter Resonance", { 1.0f, 10, 0.1f }, 1.0f);
+        
         // ADSR
-        addParam("ATTACK", "Attack", { 0.1f, 1.0f, 0.1f }, 0.1f);
-        addParam("DECAY", "Decay", { 0.1f, 1.0f, 0.1f }, 0.1f);
-        addParam("SUSTAIN", "Sustain", { 0.1f, 1.0f, 0.1f }, 1.0f);
-        addParam("RELEASE", "Release", { 0.1f, 3.0f, 0.1f }, 0.4f);
+        addParam("AMPATTACK", "Amp Attack", { 0.005f, 15.0f, 0.001f, 0.2f }, 0.005f);
+        addParam("AMPDECAY", "Amp Decay", { 0.005f, 15.0f, 0.001f, 0.2f }, 0.625f);
+        addParam("AMPSUSTAIN", "Amp Sustain", { 0.0f, 1.0f, 0.001f}, .5f);
+        addParam("AMPRELEASE", "Amp Release", { 0.005f, 15.0f, 0.001f, 0.2f }, 0.500f);
+        
+        // ADSR
+        addParam("MODATTACK", "Mod Attack", { 0.005f, 15.0f, 0.001f, 0.2f }, 0.005f);
+        addParam("MODDECAY", "Mod Decay", { 0.005f, 15.0f, 0.001f, 0.2f }, 0.625f);
+        addParam("MODSUSTAIN", "Mod Sustain", { 0.0f, 1.0f, 0.001f }, .5f);
+        addParam("MODRELEASE", "Mod Release", { 0.005f, 15.0f, 0.001f, 0.2f }, 0.500f);
     }
 
     return { params.begin(), params.end() };

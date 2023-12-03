@@ -12,6 +12,7 @@
 
 #include <JuceHeader.h>
 #include "ADSRData.h"
+#include "FilterData.h"
 
 class OscData : public juce::dsp::Oscillator<float> {
 public:
@@ -22,15 +23,20 @@ public:
     void getNextAudioBlock(juce::AudioBuffer<float>& outputBuffer);
     void setOscOn(const bool isOn) { this->isOn = isOn; };
     void setOscParams(const int octave, const int semi, const float detune, const float gain);
-    void setADSR(const float attack, const float decay, const float sustain, const float release);
+    void setAmpAdsr(const float attack, const float decay, const float sustain, const float release);
+    void setFilter(const int filterType, const float cutoffFreq, const float resonance);
+    void setModAdsr(const float attack, const float decay, const float sustain, const float release);
     void setFMParams(const float depth, const float frequency);
-    void startNote();
-    void stopNote();
+    AdsrData& getAmpAdsr() { return ampAdsr; };
+    AdsrData& getModAdsr() { return modAdsr; };
+    bool isOn { false };
 private:
     juce::dsp::Oscillator<float> fmOsc { [](float x) { return std::sin(x); }};
     juce::dsp::Gain<float> gain;
-    AdsrData adsr;
-    bool isOn { false };
+    AdsrData ampAdsr;
+    AdsrData modAdsr;
+    FilterData filter;
+    float modulator { 0.0f };
     float fmMod { 0.0f };
     float fmDepth { 0.0f };
     int oscOctave { 0 };
