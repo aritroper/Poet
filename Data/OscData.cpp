@@ -95,7 +95,7 @@ void OscData::getNextAudioBlock(juce::AudioBuffer<float>& outputBuffer) {
             // FM
             // fmMod = fmOsc.processSample(outputBuffer.getSample(ch, s)) * fmDepth;
             
-            // Filter
+            // Filter + ModAdsr
             modulator = modAdsr.getNextSample();
             filter.setModulator(modulator);
             const float filterSample = filter.processSample(ch, outputBuffer.getSample(ch, s));

@@ -20,7 +20,11 @@ void FilterData::process(juce::AudioBuffer<float>& buffer) {
 }
 
 float FilterData::processSample(int channel, float inputValue) {
-    return filter.processSample(channel, inputValue);
+    if (this->isOn) {
+        return filter.processSample(channel, inputValue);
+    } else {
+        return inputValue;
+    }
 }
 
 void FilterData::setFilterParameters(const int filterType, const float cutoffFreq, const float resonance) {

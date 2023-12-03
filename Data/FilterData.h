@@ -20,6 +20,7 @@ public:
     void setFilterParameters(const int filterType, const float cutoffFreq, const float resonance);
     void setModulator(const float modulator);
     void reset();
+    bool isOn { false };
 private:
     float cutoff;
     float resonance;

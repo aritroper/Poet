@@ -11,10 +11,26 @@
 #include <JuceHeader.h>
 #include "FilterComponent.h"
 
-FilterComponent::FilterComponent(juce::AudioProcessorValueTreeState& apvts) : apvts(apvts) {
+FilterComponent::FilterComponent(juce::AudioProcessorValueTreeState& apvts) : apvts(apvts), filterOnButton("Off") {
     juce::StringArray choices { "Low-Pass", "High-Pass", "Band-Pass" };
     filterTypeSelector.addItemList(choices, 1);
     addAndMakeVisible(filterTypeSelector);
+    
+    filterOnButton.setClickingTogglesState(true);
+    filterOnButton.onClick = [this]()
+    {
+        if (filterOnButton.getToggleState())
+        {
+            filterOnButton.setButtonText("On");
+            // Additional logic for when the button is toggled on
+        }
+        else
+        {
+            filterOnButton.setButtonText("Off");
+            // Additional logic for when the button is toggled off
+        }
+    };
+    addAndMakeVisible(filterOnButton);
     
     makeSliderWithLabel(filterCutoffSlider, filterFreqLabel);
     makeSliderWithLabel(filterResonanceSlider, filterResLabel);
@@ -33,10 +49,15 @@ void FilterComponent::setOsc(int osc) {
     
     if (resonanceAttachment != nullptr)
         resonanceAttachment.reset();
+    
+    if (filterOnAttachment != nullptr)
+        filterOnAttachment.reset();
 
     juce::String oscStr = juce::String(osc);
     
     filterTypeSelectorAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(apvts, "FILTERTYPE" + oscStr, filterTypeSelector);
+    
+    filterOnAttachment =  std::make_unique<ButtonAttachment>(apvts, "FILTERON" + oscStr, filterOnButton);
 
     filterAttachment = std::make_unique<SliderAttachment>(apvts, "FILTERCUTOFF" + oscStr, filterCutoffSlider);
     resonanceAttachment = std::make_unique<SliderAttachment>(apvts, "FILTERRES" + oscStr, filterResonanceSlider);
@@ -65,6 +86,8 @@ void FilterComponent::resized() {
     const auto startX = (bounds.getWidth() - (sliderWidth*2 + padding)) / 2;
     
     filterTypeSelector.setBounds(0, 0, 120, 20);
+    
+    filterOnButton.setBounds(filterTypeSelector.getRight() + 20, 0, 60, 20);
     
     filterCutoffSlider.setBounds(startX, 80, sliderWidth, sliderHeight);
     filterFreqLabel.setBounds(filterCutoffSlider.getX(), filterCutoffSlider.getY() - 20, filterCutoffSlider.getWidth(), 20);

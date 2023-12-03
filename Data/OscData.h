@@ -24,6 +24,7 @@ public:
     void setOscOn(const bool isOn) { this->isOn = isOn; };
     void setOscParams(const int octave, const int semi, const float detune, const float gain);
     void setAmpAdsr(const float attack, const float decay, const float sustain, const float release);
+    void setFilterOn(const bool isOn) { this->filter.isOn = isOn; };
     void setFilter(const int filterType, const float cutoffFreq, const float resonance);
     void setModAdsr(const float attack, const float decay, const float sustain, const float release);
     void setFMParams(const float depth, const float frequency);

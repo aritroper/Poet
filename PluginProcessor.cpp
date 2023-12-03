@@ -182,6 +182,7 @@ void SynthTalkAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
                 auto &modRelease = *apvts.getRawParameterValue("MODRELEASE" + oscStr);
                 
                 // FILTER
+                auto &filterOn = *apvts.getRawParameterValue("FILTERON" + oscStr);
                 auto &filterType = *apvts.getRawParameterValue("FILTERTYPE" + oscStr);
                 auto &filterCutoff = *apvts.getRawParameterValue("FILTERCUTOFF" + oscStr);
                 auto &filterRes = *apvts.getRawParameterValue("FILTERRES" + oscStr);
@@ -197,6 +198,7 @@ void SynthTalkAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
                 osc.setOscParams(oscOctave.load(), oscSemi.load(), oscDetune.load(), oscGain.load());
                 osc.setAmpAdsr(ampAttack.load(), ampDecay.load(), ampSustain.load(), ampRelease.load());
                 osc.setFilter(filterType.load(), filterCutoff.load(), filterRes.load());
+                osc.setFilterOn(filterOn.load());
                 osc.setModAdsr(modAttack.load(), modDecay.load(), modSustain.load(), modRelease.load());
                 // voice->getOscillator(osc).setFMParams(fmDepth.load(), fmFreq.load());
             }
@@ -275,6 +277,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout SynthTalkAudioProcessor::cre
         addParam("OSCFMDEPTH", "FM Depth", { 0.0f, 1000.0f, 0.01f, 0.3f }, 50.0f);
 
         // FILTER
+        params.push_back(std::make_unique<juce::AudioParameterBool>(juce::ParameterID("FILTERON" + oscStr, ++paramId), "Filter on", false));
+        
         params.push_back(std::make_unique<juce::AudioParameterChoice>(
             juce::ParameterID("FILTERTYPE" + oscStr, paramId),
             "Filter Type",

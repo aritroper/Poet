@@ -27,8 +27,10 @@ public:
 
 private:
     juce::AudioProcessorValueTreeState& apvts;
+    juce::TextButton filterOnButton;
     
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+    using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
     
     juce::ComboBox filterTypeSelector { "Filter Type" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> filterTypeSelectorAttachment;
@@ -39,6 +41,8 @@ private:
     
     juce::Slider filterCutoffSlider;
     juce::Slider filterResonanceSlider;
+    
+    std::unique_ptr<ButtonAttachment> filterOnAttachment;
     
     std::unique_ptr<SliderAttachment> filterAttachment;
     std::unique_ptr<SliderAttachment> resonanceAttachment;
