@@ -42,10 +42,15 @@ private:
     juce::Slider filterCutoffSlider;
     juce::Slider filterResonanceSlider;
     
+    juce::Slider filterCutoffLfoSlider;
+    juce::Slider filterResonanceLfoSlider;
+    
     std::unique_ptr<ButtonAttachment> filterOnAttachment;
     
     std::unique_ptr<SliderAttachment> filterAttachment;
     std::unique_ptr<SliderAttachment> resonanceAttachment;
+    std::unique_ptr<SliderAttachment> filterLfoAttachment;
+    std::unique_ptr<SliderAttachment> resonanceLfoAttachment;
 
     void makeSliderWithLabel (juce::Slider& slider, juce::Label& label);
     

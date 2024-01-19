@@ -38,9 +38,6 @@ private:
     juce::Slider oscSemiSlider;
     juce::Slider oscDetuneSlider;
     
-    juce::Slider fmFreqSlider;
-    juce::Slider fmDepthSlider;
-    
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
     
@@ -51,16 +48,10 @@ private:
     std::unique_ptr<SliderAttachment> oscSemiAttachment;
     std::unique_ptr<SliderAttachment> oscDetuneAttachment;
     
-    std::unique_ptr<SliderAttachment> fmFreqAttachment;
-    std::unique_ptr<SliderAttachment> fmDepthAttachment;
-    
     juce::Label oscGainLabel { "Gain", "Gain" };
     juce::Label oscOctaveLabel { "Octave", "Octave" };
     juce::Label oscSemiLabel { "Semi", "Semi" };
     juce::Label oscDetuneLabel { "Detune", "Detune" };
-    
-    juce::Label fmFreqLabel { "FM Freq", "FM Freq" };
-    juce::Label fmDepthLabel { "FM Depth", "FM Depth" };
     
     void makeSliderWithLabel (juce::Slider& slider, juce::Label& label);
     

@@ -10,6 +10,8 @@
 
 #include "FilterData.h"
 
+FilterData::FilterData(LFOData& lfo) : cutoff(lfo, 200, 200, 20000), resonance(lfo, 1, 1, 10) {};
+
 void FilterData::prepare(juce::dsp::ProcessSpec& spec) {
     filter.prepare(spec);
 }
@@ -27,7 +29,7 @@ float FilterData::processSample(int channel, float inputValue) {
     }
 }
 
-void FilterData::setFilterParameters(const int filterType, const float cutoffFreq, const float resonance) {
+void FilterData::setFilterParameters(const int filterType, const float cutoffFreq, const float cutoffLfoDepth, const float resonance, const float resonanceLfoDepth) {
     switch (filterType) {
         case 0:
             filter.setType(juce::dsp::StateVariableTPTFilterType::lowpass);
@@ -43,16 +45,16 @@ void FilterData::setFilterParameters(const int filterType, const float cutoffFre
             break; 
     }
     
-    this->cutoff = cutoffFreq;
-    this->resonance = resonance;
-    filter.setCutoffFrequency(cutoffFreq);
-    filter.setResonance(resonance);
+    this->cutoff.setValue(cutoffFreq);
+    this->cutoff.setDepth(cutoffLfoDepth);
+    this->resonance.setValue(resonance);
+    this->resonance.setDepth(resonanceLfoDepth);
+    filter.setCutoffFrequency(this->cutoff.getLfodValue());
+    filter.setResonance(this->resonance.getLfodValue());
 }
 
-void FilterData::setModulator(const float modulator) {
-    // std::cout << "MOD: " << modulator << std::endl;
-    float modFreq = this->cutoff * modulator;
-    modFreq = std::fmin(std::fmax(modFreq, 20.0f), 20000.0f); // 20hz <= f <= 20khz
+void FilterData::setEnvelope(const float env) {
+    float modFreq = this->cutoff.getLfodValue() * env;
     filter.setCutoffFrequency(modFreq);
 }
 

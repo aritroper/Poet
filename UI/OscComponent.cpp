@@ -99,12 +99,6 @@ void OscComponent::makeSliderWithLabel(juce::Slider& slider, juce::Label& label)
 void OscComponent::setOsc(int osc) {
     if (oscWaveSelectorAttachment != nullptr)
         oscWaveSelectorAttachment.reset();
-
-    if (fmFreqAttachment != nullptr)
-        fmFreqAttachment.reset();
-
-    if (fmDepthAttachment != nullptr)
-        fmDepthAttachment.reset();
     
     if (oscOnAttachment != nullptr)
         oscOnAttachment.reset();
@@ -124,9 +118,6 @@ void OscComponent::setOsc(int osc) {
     juce::String oscStr = juce::String(osc);
     
     oscWaveSelectorAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(apvts, "OSCWAVETYPE" + oscStr, oscWaveSelector);
-
-    fmFreqAttachment = std::make_unique<SliderAttachment>(apvts, "OSCFMFREQ" + oscStr, fmFreqSlider);
-    fmDepthAttachment = std::make_unique<SliderAttachment>(apvts, "OSCFMDEPTH" + oscStr, fmDepthSlider);
     
     oscOctaveAttachment = std::make_unique<SliderAttachment>(apvts, "OSCOCTAVE" + oscStr, oscOctaveSlider);
     oscSemiAttachment = std::make_unique<SliderAttachment>(apvts, "OSCSEMI" + oscStr, oscSemiSlider);

@@ -17,7 +17,8 @@ VoiceComponent::VoiceComponent(juce::AudioProcessorValueTreeState& apvts) :
     osc (apvts),
     ampEnvelope(apvts, "AMPATTACK", "AMPDECAY", "AMPSUSTAIN", "AMPRELEASE"),
     filter(apvts),
-    modEnvelope(apvts, "MODATTACK", "MODDECAY", "MODSUSTAIN", "MODRELEASE")
+    modEnvelope(apvts, "MODATTACK", "MODDECAY", "MODSUSTAIN", "MODRELEASE"),
+    lfo(apvts)
 {
     // In your constructor, you should add any child components, and
     // initialise any special settings that your component needs.
@@ -27,6 +28,7 @@ VoiceComponent::VoiceComponent(juce::AudioProcessorValueTreeState& apvts) :
     addAndMakeVisible(osc);
     addAndMakeVisible(filter);
     addAndMakeVisible(modEnvelope);
+    addAndMakeVisible(lfo);
     setOsc(0);
 }
 
@@ -55,6 +57,7 @@ void VoiceComponent::resized()
     ampEnvelope.setBounds(osc.getRight() + modulePadding, 40, 200, 200);
     filter.setBounds(modulePadding, osc.getBottom() + modulePadding, 200, 200);
     modEnvelope.setBounds(filter.getRight() + modulePadding, osc.getBottom() + modulePadding, 200, 200);
+    lfo.setBounds(modulePadding, modEnvelope.getBottom() + modulePadding, 420, 200);
 }
 
 
@@ -81,4 +84,5 @@ void VoiceComponent::setOsc(int osc) {
     this->osc.setOsc(osc);
     this->filter.setOsc(osc);
     this->modEnvelope.setOsc(osc);
+    this->lfo.setOsc(osc);
 }

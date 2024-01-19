@@ -14,20 +14,17 @@
 // Constructor
 LfoEnabledValue::LfoEnabledValue(LFOData& lfo, double value, double min, double max, double depth) : lfo_(lfo), min_(min), max_(max), depth_(depth), value_(value) { }
 
-// Getter and Setter for value
 double LfoEnabledValue::getLfodValue() const {
-    // Calculate the modulation amount based on the depth
-    double modulationAmount = value_ * depth_ * (max_ - min_);
+    // Calculate the modulation amount based on the depth and LFO modulation
+    double modulationAmount = (depth_ / 100) * (max_ - min_) * lfo_.mod;
 
-    // Apply modulation between minValue and maxValue
-    double modulatedValue = value_ + modulationAmount * lfo_.mod;
+    // Apply modulation to the value
+    double modulatedValue = value_ + modulationAmount;
 
     // Ensure the modulatedValue stays within the specified range
     modulatedValue = std::min(std::max(modulatedValue, min_), max_);
     
-    std::cout << modulatedValue;
-    
-    return value_;
+    return modulatedValue;
 }
 
 void LfoEnabledValue::setValue(double value) {
@@ -35,7 +32,7 @@ void LfoEnabledValue::setValue(double value) {
 }
 
 void LfoEnabledValue::setDepth(double depth) {
-    depth_ = depth;
+    depth_ = std::min(std::max(depth, 0.0), 100.0);
 }
 
 double LfoEnabledValue::getDepth() const {

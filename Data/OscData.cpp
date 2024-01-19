@@ -10,10 +10,16 @@
 
 #include "OscData.h"
 
+OscData::OscData() : filter(lfo) {
+    // Constructor body
+    // Initialize other member variables if needed
+}
+
+
 void OscData::prepareToPlay(juce::dsp::ProcessSpec& spec) {
     ampAdsr.setSampleRate(spec.sampleRate);
     modAdsr.setSampleRate(spec.sampleRate);
-    fmOsc.prepare(spec);
+    lfo.prepare(spec);
     gain.prepare(spec);
     filter.prepare(spec);
     prepare(spec);
@@ -22,7 +28,7 @@ void OscData::prepareToPlay(juce::dsp::ProcessSpec& spec) {
 float OscData::getFrequency() {
     float frequencyMultiplier = std::pow(2.0f, static_cast<float>(oscOctave) + oscSemi / 12.0f);
     float detuneFactor = std::pow(2.0f, oscDetune / 1200.0f);
-    float freq = juce::MidiMessage::getMidiNoteInHertz(lastMidiNote) * frequencyMultiplier * detuneFactor + fmMod;
+    float freq = juce::MidiMessage::getMidiNoteInHertz(lastMidiNote) * frequencyMultiplier * detuneFactor;
     freq += std::abs(std::min(0.0f, freq));
     return freq;
 }
@@ -65,14 +71,12 @@ void OscData::setModAdsr(const float attack, const float decay, const float sust
     modAdsr.setAdsrParameters(attack, decay, sustain, release);
 }
 
-void OscData::setFilter(const int filterType, const float cutoffFreq, const float resonance) {
-    filter.setFilterParameters(filterType, cutoffFreq, resonance);
+void OscData::setFilter(const int filterType, const float cutoffFreq, const float cutoffLfoDepth, const float resonance, const float resonanceLfoDepth) {
+    filter.setFilterParameters(filterType, cutoffFreq, cutoffLfoDepth, resonance, resonanceLfoDepth);
 }
 
-void OscData::setFMParams(const float depth, const float frequency) {
-    fmOsc.setFrequency(frequency);
-    fmDepth = depth;
-    setFrequency(getFrequency());
+void OscData::setLfoParams(const float frequency) {
+    lfo.setLfoParams(frequency);
 }
 
 void OscData::getNextAudioBlock(juce::AudioBuffer<float>& outputBuffer) {
@@ -93,11 +97,10 @@ void OscData::getNextAudioBlock(juce::AudioBuffer<float>& outputBuffer) {
     for (int ch = 0; ch < outputBuffer.getNumChannels(); ++ch) {
         for (int s = 0; s < outputBuffer.getNumSamples(); ++s) {
             // FM
-            // fmMod = fmOsc.processSample(outputBuffer.getSample(ch, s)) * fmDepth;
+            lfo.processSample(outputBuffer.getSample(ch, s));
             
             // Filter + ModAdsr
-            modulator = modAdsr.getNextSample();
-            filter.setModulator(modulator);
+            filter.setEnvelope(modAdsr.getNextSample());
             const float filterSample = filter.processSample(ch, outputBuffer.getSample(ch, s));
             outputBuffer.setSample(ch, s, filterSample);
         }

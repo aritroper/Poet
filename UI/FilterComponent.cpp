@@ -34,6 +34,8 @@ FilterComponent::FilterComponent(juce::AudioProcessorValueTreeState& apvts) : ap
     
     makeSliderWithLabel(filterCutoffSlider, filterFreqLabel);
     makeSliderWithLabel(filterResonanceSlider, filterResLabel);
+    makeSliderWithLabel(filterCutoffLfoSlider, filterFreqLabel);
+    makeSliderWithLabel(filterResonanceLfoSlider, filterResLabel);
 }
 
 FilterComponent::~FilterComponent() {
@@ -53,6 +55,13 @@ void FilterComponent::setOsc(int osc) {
     if (filterOnAttachment != nullptr)
         filterOnAttachment.reset();
 
+    if (filterLfoAttachment != nullptr)
+        filterLfoAttachment.reset();
+    
+    if (resonanceLfoAttachment != nullptr)
+        resonanceLfoAttachment.reset();
+
+    
     juce::String oscStr = juce::String(osc);
     
     filterTypeSelectorAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(apvts, "FILTERTYPE" + oscStr, filterTypeSelector);
@@ -61,6 +70,9 @@ void FilterComponent::setOsc(int osc) {
 
     filterAttachment = std::make_unique<SliderAttachment>(apvts, "FILTERCUTOFF" + oscStr, filterCutoffSlider);
     resonanceAttachment = std::make_unique<SliderAttachment>(apvts, "FILTERRES" + oscStr, filterResonanceSlider);
+    
+    filterLfoAttachment = std::make_unique<SliderAttachment>(apvts, "FILTERCUTOFFLFO" + oscStr, filterCutoffLfoSlider);
+    resonanceLfoAttachment = std::make_unique<SliderAttachment>(apvts, "FILTERRESLFO" + oscStr, filterResonanceLfoSlider);
 }
 
 void FilterComponent::paint(juce::Graphics& g){
@@ -94,6 +106,12 @@ void FilterComponent::resized() {
     
     filterResonanceSlider.setBounds(filterFreqLabel.getRight() + padding, 80, sliderWidth, sliderHeight);
     filterResLabel.setBounds(filterResonanceSlider.getX(), filterResonanceSlider.getY() - 20, filterResonanceSlider.getWidth(), 20);
+    
+    filterCutoffLfoSlider.setTextBoxIsEditable(true);
+    filterCutoffLfoSlider.setBounds(startX, 150, sliderWidth, 30);
+    
+    filterResonanceLfoSlider.setTextBoxIsEditable(true);
+    filterResonanceLfoSlider.setBounds(filterFreqLabel.getRight() + padding, 150, sliderWidth, 30);
 }
 
 void FilterComponent::makeSliderWithLabel(juce::Slider &slider, juce::Label &label) {

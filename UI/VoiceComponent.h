@@ -14,6 +14,7 @@
 #include "ADSRComponent.h"
 #include "OscComponent.h"
 #include "FilterComponent.h"
+#include "LFOComponent.h"
 
 //==============================================================================
 /*
@@ -38,6 +39,7 @@ private:
     AdsrComponent ampEnvelope;
     FilterComponent filter;
     AdsrComponent modEnvelope;
+    LFOComponent lfo;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (VoiceComponent)
 };
